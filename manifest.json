@@ -1,0 +1,21 @@
+{
+  "manifest_version": 3,
+  "name": "man-typer",
+  "version": "0.1.0",
+  "description": "Types clipboard text with natural timing and optional self-corrected typos.",
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "action": {
+    "default_title": "man-typer settings",
+    "default_popup": "popup.html"
+  },
+  "icons": {
+    "16": "icon.png",
+    "32": "icon.png",
+    "48": "icon.png",
+    "128": "icon.png"
+  },
+  "permissions": ["contextMenus", "debugger", "scripting", "activeTab", "storage"]
+}

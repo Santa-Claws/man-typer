@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>man-typer</title>
+    <link rel="stylesheet" href="popup.css">
+  </head>
+  <body>
+    <main>
+      <h1>man-typer</h1>
+      <p class="intro">Clipboard text stays local. Corrections always leave the original text intact.</p>
+      <form id="settings-form">
+        <label class="switch-row"><span>Human-like corrections</span><input id="humanLike" type="checkbox"></label>
+        <label>Typo rate <output id="typoRateValue"></output><input id="typoRate" type="range" min="0" max="0.4" step="0.01"></label>
+        <label>Typing speed <span class="pair"><input id="minDelayMs" type="number" min="5" max="1000">–<input id="maxDelayMs" type="number" min="5" max="1000"> ms</span></label>
+        <label>Correction delay <span class="pair"><input id="correctionDelayMs" type="number" min="50" max="3000"> ms</span></label>
+        <label>Pause intensity <select id="pauseIntensity"><option value="0">None</option><option value="0.5">Light</option><option value="1">Normal</option><option value="2">Pronounced</option><option value="3">Very pronounced</option></select></label>
+        <button type="submit">Save settings</button>
+        <p id="status" role="status"></p>
+      </form>
+    </main>
+    <script type="module" src="popup.js"></script>
+  </body>
+</html>
