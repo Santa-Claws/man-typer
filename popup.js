@@ -4,11 +4,27 @@ const form = document.querySelector('#settings-form');
 const typoRate = document.querySelector('#typoRate');
 const typoRateValue = document.querySelector('#typoRateValue');
 const status = document.querySelector('#status');
+const startTypingButton = document.querySelector('#startTyping');
+const stopTypingButton = document.querySelector('#stopTyping');
+const typingStatus = document.querySelector('#typingStatus');
 
 const { settings = {} } = await chrome.storage.local.get('settings');
 populate(normalizeSettings({ ...DEFAULT_SETTINGS, ...settings }));
+const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true });
+updateTypingControls(false);
+if (activeTab?.id) {
+  const { running } = await chrome.runtime.sendMessage({ type: 'get-typing-state', tabId: activeTab.id });
+  updateTypingControls(running);
+}
 
 typoRate.addEventListener('input', updateTypoRateLabel);
+startTypingButton.addEventListener('click', () => controlTyping('start-typing'));
+stopTypingButton.addEventListener('click', () => controlTyping('stop-typing'));
+chrome.runtime.onMessage.addListener((message) => {
+  if (message?.type === 'typing-state' && message.tabId === activeTab?.id) {
+    updateTypingControls(message.running);
+  }
+});
 form.addEventListener('submit', async (event) => {
   event.preventDefault();
   const next = normalizeSettings({
@@ -38,4 +54,22 @@ function populate(settings) {
 function updateTypoRateLabel() {
   typoRateValue.value = `${Math.round(Number(typoRate.value) * 100)}%`;
   typoRateValue.textContent = typoRateValue.value;
+}
+
+async function controlTyping(type) {
+  if (!activeTab?.id) {
+    typingStatus.textContent = 'No active tab is available.';
+    return;
+  }
+  const { running } = await chrome.runtime.sendMessage({ type, tabId: activeTab.id });
+  updateTypingControls(running);
+  if (type === 'start-typing') window.close();
+}
+
+function updateTypingControls(running) {
+  startTypingButton.disabled = running;
+  stopTypingButton.disabled = !running;
+  typingStatus.textContent = running
+    ? 'Typing clipboard text in the focused field.'
+    : 'Focus a field, then start typing.';
 }

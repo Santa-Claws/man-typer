@@ -7,8 +7,9 @@ A local-only Chrome/Chromium extension that types clipboard text with natural ti
 1. Clone this repository.
 2. In Chrome, open `chrome://extensions` and enable **Developer mode**.
 3. Select **Load unpacked** and choose this project directory.
-4. Copy text, focus the destination field, then right-click and choose **Start man-typer**.
-5. Use **Stop man-typer** from the same menu to cancel. Open the extension toolbar icon to adjust behavior.
+4. Copy text and focus the destination field.
+5. Click the extension toolbar icon, then select **Start typing**. The popup closes and restores the field you focused before typing; no right-click is needed.
+6. Reopen the extension popup and select **Stop typing** to cancel. The popup also contains the typing settings.
 
 ## What it does
 
@@ -30,7 +31,6 @@ npm test
 
 - `debugger` sends text and Backspace events, including to editors such as Google Docs.
 - `scripting` and `activeTab` let the extension read clipboard text only after a user starts typing from the active page.
-- `contextMenus` adds the start/stop controls.
 - `storage` saves settings locally.
 
 ## License and attribution

@@ -3,6 +3,8 @@ body { margin: 0; min-width: 320px; background: #18181b; color: #f4f4f5; }
 main { padding: 16px; }
 h1 { margin: 0; font-size: 20px; }
 .intro { color: #a1a1aa; font-size: 12px; }
+.typing-controls { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 16px 0; }
+.typing-controls #typingStatus { grid-column: 1 / -1; margin: 0; min-height: 1em; color: #a1a1aa; font-size: 12px; }
 form { display: grid; gap: 13px; }
 label { display: grid; gap: 5px; font-weight: 600; }
 .switch-row { grid-template-columns: 1fr auto; align-items: center; }
@@ -10,4 +12,6 @@ label { display: grid; gap: 5px; font-weight: 600; }
 input[type="number"] { width: 60px; }
 input, select, button { font: inherit; }
 button { border: 0; border-radius: 6px; padding: 8px; background: #5b21b6; color: white; font-weight: 700; cursor: pointer; }
+button.secondary { background: #3f3f46; }
+button:disabled { cursor: not-allowed; opacity: 0.55; }
 #status { min-height: 1em; margin: 0; color: #a7f3d0; font-size: 12px; }

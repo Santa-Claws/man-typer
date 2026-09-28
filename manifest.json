@@ -11,11 +11,16 @@
     "default_title": "man-typer settings",
     "default_popup": "popup.html"
   },
+  "content_scripts": [{
+    "matches": ["<all_urls>"],
+    "js": ["focus-tracker.js"],
+    "run_at": "document_start"
+  }],
   "icons": {
     "16": "icon.png",
     "32": "icon.png",
     "48": "icon.png",
     "128": "icon.png"
   },
-  "permissions": ["contextMenus", "debugger", "scripting", "activeTab", "storage"]
+  "permissions": ["debugger", "scripting", "activeTab", "storage"]
 }

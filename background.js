@@ -1,29 +1,44 @@
 import { createTypingPlan, DEFAULT_SETTINGS } from './src/typing-plan.js';
 
-const MENU_START = 'start-typing';
-const MENU_STOP = 'stop-typing';
 const tasks = new Map();
-
-chrome.runtime.onInstalled.addListener(() => {
-  chrome.contextMenus.removeAll(() => {
-    chrome.contextMenus.create({ id: MENU_START, title: 'Start man-typer', contexts: ['all'] });
-    chrome.contextMenus.create({ id: MENU_STOP, title: 'Stop man-typer', contexts: ['all'] });
-  });
-});
-
-chrome.contextMenus.onClicked.addListener(({ menuItemId }, tab) => {
-  if (!tab?.id) return;
-  if (menuItemId === MENU_START) startTyping(tab.id);
-  if (menuItemId === MENU_STOP) stopTyping(tab.id);
-});
 
 chrome.tabs.onRemoved.addListener((tabId) => stopTyping(tabId));
 
-async function startTyping(tabId) {
-  stopTyping(tabId);
-  const task = { cancelled: false, attached: false };
+chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+  if (message?.type === 'get-typing-state') {
+    sendResponse({ running: tasks.has(message.tabId) });
+    return;
+  }
+
+  if (message?.type === 'start-typing') {
+    startTyping(message.tabId);
+    sendResponse({ running: true });
+    return;
+  }
+
+  if (message?.type === 'stop-typing') {
+    stopTyping(message.tabId);
+    sendResponse({ running: false });
+  }
+});
+
+function startTyping(tabId) {
+  const previousTask = tasks.get(tabId);
+  const task = { tabId, cancelled: false, attached: false };
   tasks.set(tabId, task);
+  publishState(tabId, true);
+  void runTyping(tabId, task, previousTask);
+}
+
+async function runTyping(tabId, task, previousTask) {
   try {
+    if (previousTask) await cancelTask(previousTask);
+    if (task.cancelled || tasks.get(tabId) !== task) return;
+    // Closing the action popup returns focus to the page. Let that complete, then
+    // restore the exact editable element that was focused before the popup opened.
+    await wait(100);
+    await restoreTypingFocus(tabId);
+    if (task.cancelled || tasks.get(tabId) !== task) return;
     await chrome.debugger.attach({ tabId }, '1.3');
     task.attached = true;
     const text = await readClipboard(tabId);
@@ -38,14 +53,51 @@ async function startTyping(tabId) {
   } catch (error) {
     console.warn('man-typer could not complete typing', error);
   } finally {
-    if (tasks.get(tabId) === task) tasks.delete(tabId);
-    if (task.attached) await chrome.debugger.detach({ tabId }).catch(() => {});
+    if (tasks.get(tabId) === task) {
+      tasks.delete(tabId);
+      publishState(tabId, false);
+    }
+    await cancelTask(task);
   }
+}
+
+async function restoreTypingFocus(tabId) {
+  await chrome.scripting.executeScript({
+    target: { tabId },
+    func: () => {
+      const savedTarget = document.querySelector('[data-man-typer-target]');
+      const activeTarget = document.activeElement;
+      const target = savedTarget || (
+        activeTarget instanceof HTMLElement && activeTarget.matches(
+          'input:not([type="button"]):not([type="checkbox"]):not([type="radio"]), textarea, [contenteditable="true"], [contenteditable=""]',
+        ) ? activeTarget : null
+      );
+      if (target instanceof HTMLElement) {
+        target.focus({ preventScroll: true });
+        target.removeAttribute('data-man-typer-target');
+      }
+    },
+  });
 }
 
 function stopTyping(tabId) {
   const task = tasks.get(tabId);
-  if (task) task.cancelled = true;
+  if (!task) return;
+  tasks.delete(tabId);
+  task.cancelled = true;
+  publishState(tabId, false);
+  void cancelTask(task);
+}
+
+async function cancelTask(task) {
+  task.cancelled = true;
+  if (!task.attached) return;
+  task.attached = false;
+  await chrome.debugger.detach({ tabId: task.tabId }).catch(() => {});
+}
+
+function publishState(tabId, running) {
+  chrome.runtime.sendMessage({ type: 'typing-state', tabId, running }).catch(() => {});
 }
 
 function insertText(tabId, text) {
