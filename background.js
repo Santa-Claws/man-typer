@@ -11,7 +11,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   }
 
   if (message?.type === 'start-typing') {
-    startTyping(message.tabId);
+    startTyping(message.tabId, message.text);
     sendResponse({ running: true });
     return;
   }
@@ -22,15 +22,15 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   }
 });
 
-function startTyping(tabId) {
+function startTyping(tabId, text) {
   const previousTask = tasks.get(tabId);
   const task = { tabId, cancelled: false, attached: false };
   tasks.set(tabId, task);
   publishState(tabId, true);
-  void runTyping(tabId, task, previousTask);
+  void runTyping(tabId, task, previousTask, text);
 }
 
-async function runTyping(tabId, task, previousTask) {
+async function runTyping(tabId, task, previousTask, text) {
   try {
     if (previousTask) await cancelTask(previousTask);
     if (task.cancelled || tasks.get(tabId) !== task) return;
@@ -41,7 +41,6 @@ async function runTyping(tabId, task, previousTask) {
     if (task.cancelled || tasks.get(tabId) !== task) return;
     await chrome.debugger.attach({ tabId }, '1.3');
     task.attached = true;
-    const text = await readClipboard(tabId);
     const { settings = {} } = await chrome.storage.local.get('settings');
     const plan = createTypingPlan(text, { ...DEFAULT_SETTINGS, ...settings });
     for (const action of plan) {
@@ -113,14 +112,6 @@ async function pressBackspace(tabId, count) {
       type: 'keyUp', key: 'Backspace', code: 'Backspace', windowsVirtualKeyCode: 8,
     });
   }
-}
-
-async function readClipboard(tabId) {
-  const [{ result }] = await chrome.scripting.executeScript({
-    target: { tabId },
-    func: () => navigator.clipboard.readText(),
-  });
-  return result ?? '';
 }
 
 function wait(milliseconds) {

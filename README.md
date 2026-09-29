@@ -2,14 +2,32 @@
 
 A local-only Chrome/Chromium extension that types clipboard text with natural timing and optional, self-corrected typos. The final text always exactly matches the clipboard.
 
-## Install locally
+## Install it (the easy way)
 
-1. Clone this repository.
-2. In Chrome, open `chrome://extensions` and enable **Developer mode**.
-3. Select **Load unpacked** and choose this project directory.
-4. Copy text and focus the destination field.
-5. Click the extension toolbar icon, then select **Start typing**. The popup closes and restores the field you focused before typing; no right-click is needed.
-6. Reopen the extension popup and select **Stop typing** to cancel. The popup also contains the typing settings.
+This extension works in **Google Chrome** and **Microsoft Edge**. You do not need to install any other program.
+
+1. On this GitHub page, click the green **Code** button, then click **Download ZIP**. Or use [this Download ZIP link](https://github.com/Santa-Claws/man-typer/archive/refs/heads/main.zip).
+2. Open your **Downloads** folder. Find `man-typer-main.zip`, right-click it, and choose **Extract All**. Click **Extract**.
+3. Open Chrome. (In Edge, use the same steps, but type `edge://extensions` instead.)
+4. Click the address bar, type `chrome://extensions`, and press Enter.
+5. Turn on **Developer mode**. It is a little switch near the top-right corner.
+6. Click **Load unpacked**.
+7. Choose the folder named `man-typer-main` that was created when you extracted the ZIP. Important: choose the folder, not the ZIP file. Then click **Select Folder**.
+8. You should see a new card called **man-typer**. Click the puzzle-piece icon near the top-right of Chrome and pin man-typer if you want its button to stay visible.
+
+### Use it
+
+1. Copy the words you want to type.
+2. Click once in the box where you want the words to go.
+3. Click the man-typer extension icon, then click **Start typing**.
+4. The popup disappears and typing begins. To stop it, open man-typer again and click **Stop typing**.
+
+### If it does not type
+
+- After installing or updating, go back to the page where you want to type and refresh it once.
+- Make sure you copied some text first, then click inside a normal text box before pressing **Start typing**.
+- Try it in a simple text box on a normal website first. Password boxes, payment forms, browser pages such as `chrome://...`, and some work/school websites may block extensions from typing for safety.
+- When Chrome asks to allow the extension to debug the page, allow it. That permission is how man-typer types one character at a time.
 
 ## What it does
 
@@ -30,7 +48,8 @@ npm test
 ## Permissions
 
 - `debugger` sends text and Backspace events, including to editors such as Google Docs.
-- `scripting` and `activeTab` let the extension read clipboard text only after a user starts typing from the active page.
+- `clipboardRead` reads the text you choose to type when you press **Start typing**.
+- `scripting` and `activeTab` restore the focused field after the popup closes.
 - `storage` saves settings locally.
 
 ## License and attribution

@@ -61,9 +61,16 @@ async function controlTyping(type) {
     typingStatus.textContent = 'No active tab is available.';
     return;
   }
-  const { running } = await chrome.runtime.sendMessage({ type, tabId: activeTab.id });
-  updateTypingControls(running);
-  if (type === 'start-typing') window.close();
+  try {
+    const message = { type, tabId: activeTab.id };
+    if (type === 'start-typing') message.text = await navigator.clipboard.readText();
+    const { running } = await chrome.runtime.sendMessage(message);
+    updateTypingControls(running);
+    if (type === 'start-typing') window.close();
+  } catch (error) {
+    console.warn('man-typer could not read the clipboard', error);
+    typingStatus.textContent = 'Could not read the clipboard. Copy the text, then try again.';
+  }
 }
 
 function updateTypingControls(running) {
