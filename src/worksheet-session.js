@@ -42,8 +42,11 @@ export function markCurrentEntryWritten(session) {
   return { ...session, status: 'awaiting_confirmation' };
 }
 
-export function confirmCurrentEntry(session) {
-  if (!session || session.status !== 'awaiting_confirmation') {
+export function confirmCurrentEntry(session, nowSeconds = Math.floor(Date.now() / 1000)) {
+  if (!session || session.expiresAt <= nowSeconds) {
+    throw new Error('worksheet package has expired');
+  }
+  if (session.status !== 'awaiting_confirmation') {
     throw new Error('worksheet entry must be written before confirmation');
   }
   const entry = currentEntry(session);

@@ -22,7 +22,7 @@ test('worksheet package exposes only the next ordered answer until it is confirm
   const awaitingConfirmation = markCurrentEntryWritten(session);
   assert.equal(awaitingConfirmation.status, 'awaiting_confirmation');
   assert.throws(() => markCurrentEntryWritten(awaitingConfirmation), /confirmation/);
-  const advanced = confirmCurrentEntry(awaitingConfirmation);
+  const advanced = confirmCurrentEntry(awaitingConfirmation, 1_001);
   assert.deepEqual(currentEntry(advanced), packageData.entries[1]);
   assert.equal(advanced.nextSequence, 2);
 });
@@ -49,4 +49,10 @@ test('worksheet package rejects expired or out-of-order entries', () => {
     () => createWorksheetSession({ ...packageData, entries: [packageData.entries[1], packageData.entries[0]] }, 1_000),
     /ordered/,
   );
+});
+
+test('worksheet confirmation fails closed when the package expires after writing', () => {
+  const session = markCurrentEntryWritten(createWorksheetSession(packageData, 1_000));
+
+  assert.throws(() => confirmCurrentEntry(session, 2_000), /expired/);
 });
