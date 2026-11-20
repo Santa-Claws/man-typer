@@ -11,6 +11,12 @@
     "default_title": "man-typer settings",
     "default_popup": "popup.html"
   },
+  "commands": {
+    "write-current-worksheet-answer": {
+      "suggested_key": {"default": "Alt+Shift+Y"},
+      "description": "Write the current reviewed worksheet answer"
+    }
+  },
   "content_scripts": [{
     "matches": ["<all_urls>"],
     "js": ["focus-tracker.js"],

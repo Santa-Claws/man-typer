@@ -15,6 +15,16 @@
         <button id="stopTyping" type="button" class="secondary">Stop typing</button>
         <p id="typingStatus" role="status" aria-live="polite"></p>
       </section>
+      <section class="worksheet-controls" aria-label="Worksheet mode">
+        <h2>Worksheet mode</h2>
+        <p class="intro">Paste a reviewed package from Worksheet Automation. It stays in this browser session. Focus each Google Docs blank, press <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>Y</kbd>, visually verify the answer, then confirm below.</p>
+        <textarea id="worksheetPackage" rows="4" placeholder="Paste worksheet package JSON"></textarea>
+        <button id="loadWorksheetPackage" type="button">Load reviewed package</button>
+        <p id="worksheetEntry" class="worksheet-entry"></p>
+        <button id="confirmWorksheetEntry" type="button" class="secondary">I verified this answer; advance</button>
+        <button id="clearWorksheetSession" type="button" class="secondary">Clear worksheet package</button>
+        <p id="worksheetStatus" role="status" aria-live="polite"></p>
+      </section>
       <form id="settings-form">
         <label class="switch-row"><span>Human-like corrections</span><input id="humanLike" type="checkbox"></label>
         <label>Typo rate <output id="typoRateValue"></output><input id="typoRate" type="range" min="0" max="0.4" step="0.01"></label>
