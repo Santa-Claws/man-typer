@@ -1,8 +1,17 @@
 import { createTypingPlan, DEFAULT_SETTINGS } from './src/typing-plan.js';
+import { confirmCurrentEntry, createWorksheetSession, currentEntry, markCurrentEntryWritten } from './src/worksheet-session.js';
+import { writeCurrentWorksheetEntry } from './src/worksheet-writer.js';
 
 const tasks = new Map();
+const worksheetWriteTabs = new Set();
+const WORKSHEET_SESSION_KEY = 'worksheetSession';
+const WORKSHEET_RESULT_KEY = 'worksheetResult';
 
 chrome.tabs.onRemoved.addListener((tabId) => stopTyping(tabId));
+
+chrome.commands.onCommand.addListener((command) => {
+  if (command === 'write-current-worksheet-answer') void writeCurrentWorksheetAnswer();
+});
 
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (message?.type === 'get-typing-state') {
@@ -19,8 +28,109 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (message?.type === 'stop-typing') {
     stopTyping(message.tabId);
     sendResponse({ running: false });
+    return;
+  }
+
+  if (message?.type === 'get-worksheet-state') {
+    void worksheetState().then(sendResponse);
+    return true;
+  }
+
+  if (message?.type === 'import-worksheet-package') {
+    void importWorksheetPackage(message.package).then(sendResponse);
+    return true;
+  }
+
+  if (message?.type === 'confirm-worksheet-entry') {
+    void confirmWorksheetEntry().then(sendResponse);
+    return true;
+  }
+
+  if (message?.type === 'clear-worksheet-session') {
+    void clearWorksheetSession().then(sendResponse);
+    return true;
   }
 });
+
+async function writeCurrentWorksheetAnswer() {
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  if (!tab?.id || !tab.url || worksheetWriteTabs.has(tab.id)) return;
+  const { worksheetSession } = await chrome.storage.session.get(WORKSHEET_SESSION_KEY);
+  if (!worksheetSession) return;
+  worksheetWriteTabs.add(tab.id);
+  try {
+    await chrome.debugger.attach({ tabId: tab.id }, '1.3');
+    await writeCurrentWorksheetEntry(
+      worksheetSession,
+      tab.url,
+      (method, payload) => chrome.debugger.sendCommand({ tabId: tab.id }, method, payload),
+    );
+    const nextSession = markCurrentEntryWritten(worksheetSession);
+    await chrome.storage.session.set({
+      [WORKSHEET_SESSION_KEY]: nextSession,
+      [WORKSHEET_RESULT_KEY]: { message: 'Answer inserted. Visually verify it, then confirm in the extension.', error: false },
+    });
+  } catch (error) {
+    await chrome.storage.session.set({
+      [WORKSHEET_RESULT_KEY]: { message: error.message || 'Worksheet answer was not inserted.', error: true },
+    });
+  } finally {
+    worksheetWriteTabs.delete(tab.id);
+    await chrome.debugger.detach({ tabId: tab.id }).catch(() => {});
+  }
+}
+
+async function importWorksheetPackage(rawPackage) {
+  try {
+    const worksheetSession = createWorksheetSession(rawPackage);
+    await chrome.storage.session.set({
+      [WORKSHEET_SESSION_KEY]: worksheetSession,
+      [WORKSHEET_RESULT_KEY]: { message: 'Worksheet package loaded. Focus the first blank in the matching Google Doc, then press Alt+Shift+Y.', error: false },
+    });
+    return await worksheetState();
+  } catch (error) {
+    return { error: error.message || 'Worksheet package could not be loaded.' };
+  }
+}
+
+async function confirmWorksheetEntry() {
+  const { worksheetSession } = await chrome.storage.session.get(WORKSHEET_SESSION_KEY);
+  if (!worksheetSession) return { error: 'No worksheet package is loaded.' };
+  try {
+    const nextSession = confirmCurrentEntry(worksheetSession);
+    await chrome.storage.session.set({
+      [WORKSHEET_SESSION_KEY]: nextSession,
+      [WORKSHEET_RESULT_KEY]: {
+        message: nextSession.status === 'completed' ? 'All locally tracked answers are confirmed.' : 'Confirmed. Focus the next blank and press Alt+Shift+Y.',
+        error: false,
+      },
+    });
+    return await worksheetState();
+  } catch (error) {
+    return { error: error.message || 'Worksheet answer could not be confirmed.' };
+  }
+}
+
+async function clearWorksheetSession() {
+  await chrome.storage.session.remove([WORKSHEET_SESSION_KEY, WORKSHEET_RESULT_KEY]);
+  return { cleared: true };
+}
+
+async function worksheetState() {
+  const { worksheetSession, worksheetResult } = await chrome.storage.session.get([WORKSHEET_SESSION_KEY, WORKSHEET_RESULT_KEY]);
+  if (!worksheetSession) return { session: null, result: worksheetResult || null };
+  return {
+    session: {
+      targetDocumentId: worksheetSession.target.documentId,
+      expiresAt: worksheetSession.expiresAt,
+      nextSequence: worksheetSession.nextSequence,
+      entryCount: worksheetSession.entryCount,
+      status: worksheetSession.status,
+      entry: currentEntry(worksheetSession),
+    },
+    result: worksheetResult || null,
+  };
+}
 
 function startTyping(tabId, text) {
   const previousTask = tasks.get(tabId);

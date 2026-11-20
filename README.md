@@ -29,6 +29,18 @@ This extension works in **Google Chrome** and **Microsoft Edge**. You do not nee
 - Try it in a simple text box on a normal website first. Password boxes, payment forms, browser pages such as `chrome://...`, and some work/school websites may block extensions from typing for safety.
 - When Chrome asks to allow the extension to debug the page, allow it. That permission is how man-typer types one character at a time.
 
+### Worksheet Mode (Google Docs)
+
+Worksheet Mode is a guided workflow for reviewed answers prepared by Worksheet Automation. It does **not** find blanks, inspect document content, replace text globally, or write more than one answer at a time.
+
+1. In Worksheet Automation, review and approve every answer, then prepare a Google Docs writing package using the canonical `https://docs.google.com/document/d/.../edit` URL.
+2. Copy the package JSON from the dashboard. Open man-typer and paste it into **Worksheet Mode**, then choose **Load reviewed package**.
+3. In the matching Google Doc, click the exact intended blank. Press **Alt+Shift+Y** to insert the current answer.
+4. Visually verify the inserted text. Reopen man-typer and choose **Confirm current answer**. Then record that same verified answer in Worksheet Automation before moving on.
+5. Repeat for the next explicitly selected blank. A package expires after the time specified by Worksheet Automation; import a newly prepared package to resume.
+
+Worksheet Mode rejects a mismatched Google Docs URL, an expired package, out-of-order entries, and attempts to insert an answer twice before confirmation. It keeps the package only in Chrome's in-memory extension session storage and makes no network requests.
+
 ## What it does
 
 - Types clipboard content with variable key delays and longer punctuation pauses.

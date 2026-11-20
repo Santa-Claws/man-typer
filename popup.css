@@ -5,6 +5,11 @@ h1 { margin: 0; font-size: 20px; }
 .intro { color: #a1a1aa; font-size: 12px; }
 .typing-controls { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 16px 0; }
 .typing-controls #typingStatus { grid-column: 1 / -1; margin: 0; min-height: 1em; color: #a1a1aa; font-size: 12px; }
+.worksheet-controls { display: grid; gap: 8px; margin: 16px 0; padding: 12px 0; border-block: 1px solid #3f3f46; }
+.worksheet-controls h2 { margin: 0; font-size: 16px; }
+.worksheet-controls textarea { min-height: 72px; resize: vertical; }
+.worksheet-entry, #worksheetStatus { min-height: 1em; margin: 0; color: #a1a1aa; font-size: 12px; white-space: pre-wrap; }
+kbd { border: 1px solid #71717a; border-radius: 3px; padding: 1px 3px; font: 11px ui-monospace, monospace; }
 form { display: grid; gap: 13px; }
 label { display: grid; gap: 5px; font-weight: 600; }
 .switch-row { grid-template-columns: 1fr auto; align-items: center; }
